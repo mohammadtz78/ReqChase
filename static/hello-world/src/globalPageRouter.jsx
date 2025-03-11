@@ -49,10 +49,10 @@ const GlobalPageRouter = () => {
           location={historyState.location}
         >
           <Routes>
+            <Route exact={true} path="/" element={<div>ReqChase</div>}></Route>
             <Route path="/requirements" element={<Requirements />}></Route>
             <Route path="/dashboard" element={<Dashboard/>}></Route>
             <Route path="/validationChecklist" element={<ValidationChecklist/>}></Route>
-            <Route path="/" element={<div>Home</div>}></Route>
           </Routes>
         </Router>
       ) : (
