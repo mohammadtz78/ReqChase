@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { invoke } from "@forge/bridge";
 import { Input, Button, List } from "rsuite";
 
-const ValidationChecklist = () => {
+const VerificationChecklist = () => {
     const [items, setItems] = useState([]);
     const [newItem, setNewItem] = useState("");
     const [editIndex, setEditIndex] = useState(null);
@@ -10,20 +10,19 @@ const ValidationChecklist = () => {
 
     useEffect(() => {
         // Fetch initial validation checklist items from storage
-        invoke("getValidationChecklist").then(setItems);
+        invoke("getVerificationChecklist").then(setItems);
     }, []);
 
     const addItem = async () => {
         if (newItem.trim()) {
-            const newChecklistItem = await invoke("addValidationChecklistItem", { name: newItem.trim() });
+            const newChecklistItem = await invoke("addVerificationChecklistItem", { name: newItem.trim() });
             setItems([...items, newChecklistItem]);
             setNewItem("");
         }
     };
 
     const removeItem = async (id) => {
-        console.log({ id })
-        const response = await invoke("removeValidationChecklistItem", { id });
+        const response = await invoke("removeVerificationChecklistItem", { id });
         setItems(response);
     };
 
@@ -38,7 +37,7 @@ const ValidationChecklist = () => {
             updatedItems[index].name = editValue.trim();
             setItems(updatedItems);
             setEditIndex(null);
-            await invoke("updateValidationChecklistItem", { id: updatedItems[index].id, name: editValue.trim() });
+            await invoke("updateVerificationChecklistItem", { id: updatedItems[index].id, name: editValue.trim() });
         }
     };
 
@@ -79,4 +78,4 @@ const ValidationChecklist = () => {
     );
 };
 
-export default ValidationChecklist;
+export default VerificationChecklist;

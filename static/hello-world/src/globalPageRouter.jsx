@@ -6,6 +6,9 @@ import { Router, Route, Routes } from "react-router";
 import Loader from './loader';
 import Dashboard from './dashboard';
 import ValidationChecklist from './validationChecklist';
+import VerificationChecklist from './verificationChecklist';
+import RequirementViewEdit from './requirement';
+import Types from './types';
 
 
 const GlobalPageRouter = () => {
@@ -50,9 +53,12 @@ const GlobalPageRouter = () => {
         >
           <Routes>
             <Route exact={true} path="/" element={<div>ReqChase</div>}></Route>
+            <Route path="/requirement/:id" element={<RequirementViewEdit />}></Route>
             <Route path="/requirements" element={<Requirements />}></Route>
             <Route path="/dashboard" element={<Dashboard/>}></Route>
             <Route path="/validationChecklist" element={<ValidationChecklist/>}></Route>
+            <Route path="/verificationChecklist" element={<VerificationChecklist/>}></Route>
+            <Route path="/types" element={<Types/>}></Route>
           </Routes>
         </Router>
       ) : (

@@ -1,0 +1,54 @@
+.requirement-container {
+  padding: 20px;
+}
+
+.button-container {
+  float: right;
+  display: flex;
+}
+
+.save-button {
+  margin-right: 10px;
+}
+
+.type-tag {
+  margin-bottom: 10px;
+}
+
+.type-tag-placeholder {
+  background-color: #f7f7f7;
+  color: #8e8e93;
+}
+
+.checklist-section {
+  margin-top: 20px;
+}
+
+.checklist-content {
+  background: #f7f7f7;
+  border-radius: 4px;
+  margin-top: 8px;
+  padding: 8px;
+}
+
+.checklist-item {
+  margin-bottom: 5px;
+}
+
+/* Type Selector Styles */
+.type-selector-menu .rs-picker-select-menu-item {
+  padding: 2px !important;
+  height: 36px;
+}
+
+.type-menu-item {
+  padding: 0px 16px;
+  border-radius: 6px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.type-selector {
+  width: 100%;
+} 

@@ -3,7 +3,10 @@ import Resolver from '@forge/resolver'; // Correct import for Resolver
 import api, { storage, route } from '@forge/api';
 
 const USER_REQUIREMENTS_STORAGE_KEY = 'user-requirements'; // Static key for shared memory access
+const VALIDATION_CHECKLIST_STORAGE_KEY = 'validation-checklist'; // Static key for shared memory access
+const VERIFICATION_CHECKLIST_STORAGE_KEY = 'verification-checklist'; // Static key for shared memory access
 const REQUIREMENT_ISSUE_STORAGE_KEY = 'requirement-issue-join'; // Static key for shared memory access
+const TYPES_STORAGE_KEY = 'types'; // Static key for shared memory access
 
 const resolver = new Resolver();
 
@@ -15,13 +18,16 @@ resolver.define('getRequirements', async () => {
 
 // Add a new user requirement
 resolver.define('addRequirement', async ({ payload }) => {
-  const { name, description } = payload;
+  const { name, description, typeId } = payload;
   const storedData = (await storage.get(USER_REQUIREMENTS_STORAGE_KEY)) || [];
 
   const newRequirement = {
     id: new Date().toISOString(), // Unique ID based on timestamp
     name,
-    description
+    description,
+    validationChecks: [],
+    verificationChecks: [],
+    typeId
   };
   const updatedData = [...storedData, newRequirement];
 
@@ -42,6 +48,41 @@ resolver.define('deleteRequirement', async ({ payload }) => {
   await storage.set(USER_REQUIREMENTS_STORAGE_KEY, updatedData);
 
   return `Requirement ${id} deleted successfully.`;
+});
+
+resolver.define('getRequirement', async ({ payload }) => {
+  const { id } = payload;
+  const storedData = (await storage.get(USER_REQUIREMENTS_STORAGE_KEY)) || [];
+
+  const requirement = storedData.find((req) => req.id === id);
+  if (!requirement) {
+    throw new Error(`Requirement ${id} not found.`);
+  }
+
+  return requirement;
+});
+
+// Update an existing requirement
+resolver.define('updateRequirement', async ({ payload }) => {
+  const { id, name, description, validationChecks, verificationChecks, typeId } = payload;
+  const storedData = (await storage.get(USER_REQUIREMENTS_STORAGE_KEY)) || [];
+
+  const index = storedData.findIndex((req) => req.id === id);
+  if (index === -1) {
+    throw new Error(`Requirement ${id} not found.`);
+  }
+
+  storedData[index] = { 
+    ...storedData[index], 
+    name, 
+    description,
+    validationChecks: validationChecks || storedData[index].validationChecks || [],
+    verificationChecks: verificationChecks || storedData[index].verificationChecks || [],
+    typeId
+  };
+
+  await storage.set(USER_REQUIREMENTS_STORAGE_KEY, storedData);
+  return storedData[index];
 });
 
 resolver.define('getAssignedRequirements', async ({ payload }) => {
@@ -142,6 +183,128 @@ resolver.define('assignRequirements', async ({ payload }) => {
     issueId,
     requirements,
   };
+});
+
+resolver.define("getValidationChecklist", async () => {
+  const storedData = await storage.get(VALIDATION_CHECKLIST_STORAGE_KEY);
+  return storedData || [];
+});
+
+// Add a new validation checklist item
+resolver.define("addValidationChecklistItem", async ({ payload }) => {
+  const { name } = payload;
+  const storedData = (await storage.get(VALIDATION_CHECKLIST_STORAGE_KEY)) || [];
+
+  const newItem = {
+    id: new Date().toISOString(),
+    name,
+  };
+  const updatedData = [...storedData, newItem];
+
+  await storage.set(VALIDATION_CHECKLIST_STORAGE_KEY, updatedData);
+  return newItem;
+});
+
+// Update a validation checklist item
+resolver.define("updateValidationChecklistItem", async ({ payload }) => {
+  const { id, name } = payload;
+  const storedData = (await storage.get(VALIDATION_CHECKLIST_STORAGE_KEY)) || [];
+  const updatedData = storedData.map((item) => (item.id === id ? { ...item, name } : item));
+
+  await storage.set(VALIDATION_CHECKLIST_STORAGE_KEY, updatedData);
+  return updatedData;
+});
+
+// Remove a validation checklist item
+resolver.define("removeValidationChecklistItem", async ({ payload }) => {
+  const { id } = payload;
+  const storedData = (await storage.get(VALIDATION_CHECKLIST_STORAGE_KEY)) || [];
+  const updatedData = storedData.filter((item) => item.id !== id);
+
+  await storage.set(VALIDATION_CHECKLIST_STORAGE_KEY, updatedData);
+  return updatedData;
+});
+
+resolver.define("getVerificationChecklist", async () => {
+  const storedData = await storage.get(VERIFICATION_CHECKLIST_STORAGE_KEY);
+  return storedData || [];
+});
+
+// Add a new Verification checklist item
+resolver.define("addVerificationChecklistItem", async ({ payload }) => {
+  const { name } = payload;
+  const storedData = (await storage.get(VERIFICATION_CHECKLIST_STORAGE_KEY)) || [];
+
+  const newItem = {
+    id: new Date().toISOString(),
+    name,
+  };
+  const updatedData = [...storedData, newItem];
+
+  await storage.set(VERIFICATION_CHECKLIST_STORAGE_KEY, updatedData);
+  return newItem;
+});
+
+// Update a Verification checklist item
+resolver.define("updateVerificationChecklistItem", async ({ payload }) => {
+  const { id, name } = payload;
+  const storedData = (await storage.get(VERIFICATION_CHECKLIST_STORAGE_KEY)) || [];
+  const updatedData = storedData.map((item) => (item.id === id ? { ...item, name } : item));
+
+  await storage.set(VERIFICATION_CHECKLIST_STORAGE_KEY, updatedData);
+  return updatedData;
+});
+
+// Remove a Verification checklist item
+resolver.define("removeVerificationChecklistItem", async ({ payload }) => {
+  const { id } = payload;
+  const storedData = (await storage.get(VERIFICATION_CHECKLIST_STORAGE_KEY)) || [];
+  const updatedData = storedData.filter((item) => item.id !== id);
+
+  await storage.set(VERIFICATION_CHECKLIST_STORAGE_KEY, updatedData);
+  return updatedData;
+});
+
+// Types Resolver Functions
+resolver.define("getTypes", async () => {
+  const storedData = await storage.get(TYPES_STORAGE_KEY);
+  return storedData || [];
+});
+
+// Add a new type
+resolver.define("addType", async ({ payload }) => {
+  const { name, color } = payload;
+  const storedData = (await storage.get(TYPES_STORAGE_KEY)) || [];
+
+  const newItem = {
+    id: new Date().toISOString(),
+    name,
+    color
+  };
+  const updatedData = [...storedData, newItem];
+
+  await storage.set(TYPES_STORAGE_KEY, updatedData);
+  return newItem;
+});
+
+// Update a type
+resolver.define("updateType", async ({ payload }) => {
+  const { id, name, color } = payload;
+  const storedData = (await storage.get(TYPES_STORAGE_KEY)) || [];
+  const updatedData = storedData.map((item) => (item.id === id ? { ...item, name, color } : item));
+
+  await storage.set(TYPES_STORAGE_KEY, updatedData);
+  return updatedData;
+});
+
+// Remove a type
+resolver.define("removeType", async ({ payload }) => {
+  const { id } = payload;
+  const storedData = (await storage.get(TYPES_STORAGE_KEY)) || [];
+  const updatedData = storedData.filter((item) => item.id !== id);
+
+  await storage.set(TYPES_STORAGE_KEY, updatedData);
+  return updatedData;
 });
 
 export const handler = resolver.getDefinitions();

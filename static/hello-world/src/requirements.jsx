@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { invoke, view } from '@forge/bridge';
 import { Button, Table, Modal, Input, Notification } from 'rsuite';
+import { useNavigate } from "react-router";
 import Loader from './loader';
 
-const Requirements = () => {
+const Requirements = ({history}) => {
   const [requirements, setRequirements] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [newRequirement, setNewRequirement] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [loading, setLoading] = useState(false);
-    
+
+  const navigate = useNavigate();
+
   // Fetch requirements on load
   useEffect(() => {
     fetchRequirements();
@@ -62,6 +65,10 @@ const Requirements = () => {
     setLoading(false);
   };
 
+  const openRequirement = (data) => {
+    navigate(`/requirement/${data?.id}`);
+  };
+
 
     return (
         <div style={{ padding: '20px' }}>
@@ -75,7 +82,8 @@ const Requirements = () => {
                     autoHeight
                     bordered
                     cellBordered
-                    hover
+                    hover={false}
+                    onRowClick={(data) => openRequirement(data)}
                     sortColumn='name'
                     style={{ marginTop: '20px', width: '100%' }}
                 >
@@ -91,7 +99,7 @@ const Requirements = () => {
                         <Table.HeaderCell>Actions</Table.HeaderCell>
                         <Table.Cell>
                             {rowData => (
-                                <Button size='xs' appearance="primary" color="red" onClick={() => deleteRequirement(rowData.id)}>
+                                 <Button size='xs' appearance="primary" color="red" onClick={() => deleteRequirement(rowData.id)}>
                                     Delete
                                 </Button>
                             )}

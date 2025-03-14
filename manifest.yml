@@ -19,6 +19,10 @@ modules:
           route: /dashboard
         - title: Validation Checklist
           route: /validationChecklist
+        - title: Verification Checklist
+          route: /verificationChecklist
+        - title: Requirement Types
+          route: /types
   function:
     - key: resolver
       handler: index.handler
