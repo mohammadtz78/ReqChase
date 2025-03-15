@@ -1,0 +1,61 @@
+/* User Avatar Component Styles */
+.user-avatar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #dfe1e6;
+}
+
+.user-name {
+  font-size: 14px;
+  color: #172b4d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unassigned {
+  color: #6b778c;
+  font-style: italic;
+}
+
+/* User Profile Popover Styles */
+.user-profile-popover {
+  padding: 8px;
+  width: 240px;
+}
+
+.user-profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.user-profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #0052cc;
+  margin-bottom: 8px;
+}
+
+.user-profile-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #172b4d;
+  text-align: center;
+}
+
+.user-profile-actions {
+  display: flex;
+  justify-content: center;
+} 

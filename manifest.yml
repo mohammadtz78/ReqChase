@@ -29,6 +29,8 @@ modules:
 resources:
   - key: main
     path: static/hello-world/build
+    tunnel:
+      port: 3000
 app:
   runtime:
     name: nodejs20.x
@@ -37,11 +39,10 @@ permissions:
   scopes:
     - storage:app
     - read:jira-work
+    
   content:
     scripts:
       - 'unsafe-hashes'
       - 'unsafe-inline'
     styles:
       - 'unsafe-inline'
-
-

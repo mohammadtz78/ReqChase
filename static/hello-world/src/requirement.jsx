@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
 import { invoke, view } from '@forge/bridge';
-import { Button, Input, Notification, Panel, Checkbox, Divider, Grid, Row, Col, SelectPicker, Tag } from 'rsuite';
+import { Button, Input, Notification, Panel, Checkbox, Divider, Grid, Row, Col, SelectPicker, Tag, Modal, Progress } from 'rsuite';
 import Loader from './loader';
+import IssuesModal from './IssuesModal';
 import './requirement.css';
 
 const RequirementViewEdit = () => {
@@ -11,6 +12,10 @@ const RequirementViewEdit = () => {
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [types, setTypes] = useState([]);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [showIssuesModal, setShowIssuesModal] = useState(false);
+  const [issues, setIssues] = useState([]);
   const [editedRequirement, setEditedRequirement] = useState({ 
     name: '', 
     description: '', 
@@ -25,6 +30,7 @@ const RequirementViewEdit = () => {
     fetchRequirement();
     fetchChecklists();
     fetchTypes();
+    fetchIssues();
   }, [id]);
 
   const fetchTypes = async () => {
@@ -172,6 +178,67 @@ const RequirementViewEdit = () => {
     </div>
   );
 
+  const calculateProgress = (checkedItems, totalItems) => {
+    if (!totalItems || totalItems.length === 0) return 0;
+    return Math.round((checkedItems?.length || 0) * 100 / totalItems.length);
+  };
+
+  const ChecklistCard = ({ title, checkedItems, totalItems, onClick }) => {
+    const progress = calculateProgress(checkedItems, totalItems);
+    
+    return (
+      <div className="checklist-card" onClick={onClick}>
+        <h3>{title}</h3>
+        <div className="progress-circle">
+          <Progress.Circle percent={progress} strokeColor="#4CAF50" />
+        </div>
+        <p>{checkedItems?.length || 0} of {totalItems.length} checked</p>
+      </div>
+    );
+  };
+
+  const ChecklistModal = ({ show, onClose, title, items, checkedItems, type }) => (
+    <Modal size="lg" open={show} onClose={onClose}>
+      <Modal.Body>
+        <ChecklistSection
+          title={title}
+          items={items}
+          checkedItems={checkedItems}
+          type={type}
+        />
+      </Modal.Body>
+      <Modal.Footer>
+        <Button onClick={onClose} appearance="primary">
+          Close
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+
+  const fetchIssues = async () => {
+    try {
+      const fetchedIssues = await invoke('getRequirementIssues', { requirementId: id });
+      setIssues(fetchedIssues);
+    } catch (error) {
+      Notification.error({ title: 'Error', description: 'Failed to fetch issues.' });
+    }
+  };
+
+  const IssuesCard = ({ onClick }) => {
+    const completedIssues = issues.filter(issue => issue.isDone);
+    const progress = calculateProgress(completedIssues, issues);
+    
+    return (
+      <div className="checklist-card issues-card" onClick={onClick}>
+        <h3>Related Issues</h3>
+        <div className="progress-circle">
+          <Progress.Circle percent={progress} strokeColor="#3498db" />
+        </div>
+        <p>{completedIssues.length} of {issues.length} completed</p>
+      </div>
+    );
+  };
+
   if (loading) return <Loader />;
   if (!requirement) return <p>No requirement found.</p>;
 
@@ -201,10 +268,7 @@ const RequirementViewEdit = () => {
               onChange={(value) => setEditedRequirement({ ...editedRequirement, typeId: value })}
               className="type-selector"
               renderMenuItem={(label, item) => (
-                <div 
-                  className="type-menu-item"
-                  style={item.style}
-                >
+                <div className="type-menu-item" style={item.style}>
                   {label}
                 </div>
               )}
@@ -213,7 +277,6 @@ const RequirementViewEdit = () => {
             />
             <br /><br />
             <Input as="textarea" rows={3} value={editedRequirement.description} onChange={(value) => setEditedRequirement({ ...editedRequirement, description: value })} />
-            <br /><br />
           </>
         ) : (
           <>
@@ -238,22 +301,56 @@ const RequirementViewEdit = () => {
         
         <Divider />
         
-        <ChecklistSection
-          title="Validation Checklist"
-          items={validationChecklist}
-          checkedItems={requirement.validationChecks || []}
-          type="validation"
-        />
-        
-        <Divider />
-        
-        <ChecklistSection
-          title="Verification Checklist"
-          items={verificationChecklist}
-          checkedItems={requirement.verificationChecks || []}
-          type="verification"
-        />
+        <div className="checklist-cards">
+          <Grid fluid>
+            <Row>
+              <Col xs={8}>
+                <ChecklistCard
+                  title="Validation Checklist"
+                  checkedItems={requirement.validationChecks}
+                  totalItems={validationChecklist}
+                  onClick={() => setShowValidationModal(true)}
+                />
+              </Col>
+              <Col xs={8}>
+                <ChecklistCard
+                  title="Verification Checklist"
+                  checkedItems={requirement.verificationChecks}
+                  totalItems={verificationChecklist}
+                  onClick={() => setShowVerificationModal(true)}
+                />
+              </Col>
+              <Col xs={8}>
+                <IssuesCard onClick={() => setShowIssuesModal(true)} />
+              </Col>
+            </Row>
+          </Grid>
+        </div>
       </Panel>
+
+      <ChecklistModal 
+        show={showValidationModal}
+        onClose={() => setShowValidationModal(false)}
+        title="Validation Checklist"
+        items={validationChecklist}
+        checkedItems={requirement.validationChecks || []}
+        type="validation"
+      />
+
+      <ChecklistModal 
+        show={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        title="Verification Checklist"
+        items={verificationChecklist}
+        checkedItems={requirement.verificationChecks || []}
+        type="verification"
+      />
+
+      <IssuesModal
+        show={showIssuesModal}
+        onClose={() => setShowIssuesModal(false)}
+        issues={issues}
+      />
     </div>
   );
 };
