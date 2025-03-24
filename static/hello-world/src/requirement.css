@@ -5,10 +5,33 @@
 .button-container {
   float: right;
   display: flex;
+  margin-left:auto;
 }
 
 .save-button {
   margin-right: 10px;
+}
+
+.cream-primary-btn {
+  background-color: #f5e9c9 !important;
+  color: #8a6d3b !important;
+  border-color: #e6d5a5 !important;
+}
+
+.cream-primary-btn:hover {
+  background-color: #f0e0b2 !important;
+  border-color: #d6c38c !important;
+}
+
+/* Type Button Styles */
+.type-button {
+  margin-bottom: 10px;
+  cursor: default;
+}
+
+.type-button-placeholder {
+  background-color: #f7f7f7 !important;
+  color: #8e8e93 !important;
 }
 
 .type-tag {
@@ -20,6 +43,30 @@
   color: #8e8e93;
 }
 
+/* Description Styles */
+.description-textarea {
+  min-height: 150px !important;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.description-content {
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.description-text {
+  margin-top: 5px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  min-height: 150px;
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #e5e5ea;
+}
+
+/* Checklist Styles */
 .checklist-section {
   margin-top: 20px;
 }
@@ -36,19 +83,20 @@
 }
 
 .checklist-cards {
-  margin-top: 20px;
+  margin-top: 15px;
 }
 
 .checklist-card {
   background: #fff;
   border: 1px solid #e5e5ea;
   border-radius: 8px;
-  padding: 20px;
+  padding: 15px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
   height: 100%;
-  margin: 10px;
+  margin: 5px;
+  max-height: 180px;
 }
 
 .checklist-card:hover {
@@ -57,18 +105,20 @@
 }
 
 .checklist-card h3 {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   color: #2c3e50;
+  font-size: 16px;
 }
 
 .progress-circle {
-  margin: 15px auto;
-  width: 120px;
+  margin: 10px auto;
+  width: 100px;
 }
 
 .checklist-card p {
   color: #7f8c8d;
-  margin-top: 10px;
+  margin-top: 5px;
+  font-size: 13px;
 }
 
 .issues-card .issues-icon {
@@ -87,12 +137,24 @@
   color: #3498db;
 }
 
+/* Clickable row styles */
 .clickable-row {
-  cursor: pointer;
+  cursor: pointer !important;
 }
 
 .clickable-row:hover {
   background-color: #f5f5f5 !important;
+}
+
+/* Make sure all cells in the table have pointer cursor */
+.clickable-row td, 
+.clickable-row .rs-table-cell, 
+.clickable-row .rs-table-cell-content {
+  cursor: pointer !important;
+}
+
+.clickable-cell {
+  cursor: pointer !important;
 }
 
 /* Type Selector Styles */
@@ -113,13 +175,114 @@
   width: 100%;
 }
 
-/* Removed User Avatar Component Styles - now in UserAvatar.css */
-
-/* Clickable row styles */
-.clickable-row {
-  cursor: pointer;
+.selector-label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #575757;
+  font-size: 14px;
 }
 
-.clickable-row:hover {
-  background-color: #f4f5f7;
-} 
+.requirement-info-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  border: 1px solid #e5e5ea;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-label {
+  font-weight: 500;
+  color: #575757;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.type-button {
+  width: 100%;
+  text-align: left;
+  padding: 6px 10px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  height: auto;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.description-content {
+  margin-top: 15px;
+  margin-bottom: 12px;
+}
+
+.description-text {
+  margin-top: 6px;
+  white-space: pre-wrap;
+  line-height: 1.4;
+  min-height: 120px;
+  background-color: #f9f9f9;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e5e5ea;
+  font-size: 13px;
+}
+
+.selector-label {
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #575757;
+  font-size: 13px;
+}
+
+.type-selector-menu .rs-picker-select-menu-item {
+  padding: 2px 8px !important;
+  height: 32px;
+}
+
+.type-menu-item {
+  padding: 0px 12px;
+  border-radius: 4px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+}
+
+.activity-log {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.activity-log h3 {
+  margin-bottom: 16px;
+  color: #333;
+  font-size: 14px;
+}
+
+.activity-item {
+  padding: 6px 0;
+}
+
+.activity-message {
+  color: #333;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.activity-date {
+  color: #666;
+  font-size: 10px;
+  margin-top: 3px;
+}

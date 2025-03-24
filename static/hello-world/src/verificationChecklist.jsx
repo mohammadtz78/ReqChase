@@ -43,6 +43,8 @@ const VerificationChecklist = () => {
 
     return (
         <div style={{ padding: "20px", maxWidth: "400px", margin: "auto" }}>
+            <h2>Verification Checklist</h2>
+            <br/>
             <Input
                 value={newItem}
                 onChange={(value) => setNewItem(value)}
@@ -53,22 +55,23 @@ const VerificationChecklist = () => {
             </Button>
             <List bordered style={{ marginTop: "20px" }}>
                 {items.map((item, index) => (
-                    <List.Item key={item.id}>
+                    <List.Item key={item.id} style={{ display: "flex", alignItems: "center" }}>
                         {editIndex === index ? (
                             <>
                             <Input
                                 value={editValue}
                                 onChange={(value) => setEditValue(value)}
                                 autoFocus
+                                style={{ flex: 1 }}
                             />
                              <Button style={{margin:"6px"}} onClick={() => saveEdit(index)} color="blue" appearance="primary">
                             Save
                         </Button>
                             </>
                         ) : (
-                            <span onClick={() => startEditing(index)}>{item.name}</span>
+                            <span onClick={() => startEditing(index)} style={{ flex: 1 }}>{item.name}</span>
                         )}
-                        <Button style={{margin:"6px"}} onClick={() => removeItem(item.id)} color="red" appearance="subtle">
+                        <Button className="delete-btn" style={{margin:"6px"}} onClick={() => removeItem(item.id)} color="red" appearance="subtle">
                             Delete
                         </Button>
                     </List.Item>

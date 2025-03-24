@@ -1,10 +1,15 @@
 import { storage } from '@forge/api';
 import { generateUniqueId } from '../utils';
-
-const VALIDATION_CHECKLIST_STORAGE_KEY = 'validation-checklist';
+import { VALIDATION_CHECKLIST_STORAGE_KEY } from '../config';
+import { getFromCache, updateCache } from '../cache';
 
 // Get validation checklist
 export const getValidationChecklist = async () => {
+  const cachedChecklist = getFromCache('validationChecklist');
+  if (cachedChecklist !== null) {
+    return cachedChecklist;
+  }
+  
   const storedData = await storage.get(VALIDATION_CHECKLIST_STORAGE_KEY);
   return storedData || [];
 };
@@ -21,6 +26,7 @@ export const addValidationChecklistItem = async ({ payload }) => {
   const updatedData = [...storedData, newItem];
 
   await storage.set(VALIDATION_CHECKLIST_STORAGE_KEY, updatedData);
+  await updateCache([VALIDATION_CHECKLIST_STORAGE_KEY]);
   return newItem;
 };
 
@@ -31,6 +37,7 @@ export const updateValidationChecklistItem = async ({ payload }) => {
   const updatedData = storedData.map((item) => (item.id === id ? { ...item, name } : item));
 
   await storage.set(VALIDATION_CHECKLIST_STORAGE_KEY, updatedData);
+  await updateCache([VALIDATION_CHECKLIST_STORAGE_KEY]);
   return updatedData;
 };
 
@@ -41,5 +48,6 @@ export const removeValidationChecklistItem = async ({ payload }) => {
   const updatedData = storedData.filter((item) => item.id !== id);
 
   await storage.set(VALIDATION_CHECKLIST_STORAGE_KEY, updatedData);
+  await updateCache([VALIDATION_CHECKLIST_STORAGE_KEY]);
   return updatedData;
 }; 

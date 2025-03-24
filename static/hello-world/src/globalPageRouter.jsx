@@ -9,6 +9,8 @@ import ValidationChecklist from './validationChecklist';
 import VerificationChecklist from './verificationChecklist';
 import RequirementViewEdit from './requirement';
 import Types from './types';
+import Stages from './stages';
+import Status from './status';
 
 
 const GlobalPageRouter = () => {
@@ -59,6 +61,8 @@ const GlobalPageRouter = () => {
             <Route path="/validationChecklist" element={<ValidationChecklist/>}></Route>
             <Route path="/verificationChecklist" element={<VerificationChecklist/>}></Route>
             <Route path="/types" element={<Types/>}></Route>
+            <Route path="/stages" element={<Stages/>}></Route>
+            <Route path="/status" element={<Status/>}></Route>
           </Routes>
         </Router>
       ) : (

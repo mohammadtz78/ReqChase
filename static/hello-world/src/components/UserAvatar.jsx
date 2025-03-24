@@ -16,7 +16,7 @@ const UserProfilePopover = ({ user }) => {
     <div className="user-profile-popover">
       <div className="user-profile-header">
         <img 
-          src={user.avatarUrl?.replace?.('/16', '/64')} 
+          src={user.avatarUrl} 
           alt={user.displayName} 
           className="user-profile-avatar" 
         />
@@ -44,7 +44,7 @@ const UserAvatar = ({ user }) => {
     >
       <div className="user-avatar">
         <img 
-          src={user.avatarUrl?.replace?.('/16', '/32')} 
+          src={user.avatarUrl} 
           alt={user.displayName} 
           className="avatar-img" 
         />

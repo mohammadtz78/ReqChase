@@ -23,6 +23,10 @@ modules:
           route: /verificationChecklist
         - title: Requirement Types
           route: /types
+        - title: Requirement Stages
+          route: /stages
+        - title: Requirement Status
+          route: /status
   function:
     - key: resolver
       handler: index.handler
@@ -37,12 +41,15 @@ app:
   id: ari:cloud:ecosystem::app/8d8dc8b5-56c9-4cb5-9962-63c439c356ad
 permissions:
   scopes:
+    - read:user:jira
+    - read:jira-user
+    - read:app-system-token
+    - read:app-user-token
     - storage:app
     - read:jira-work
-    
   content:
     scripts:
-      - 'unsafe-hashes'
-      - 'unsafe-inline'
+      - unsafe-hashes
+      - unsafe-inline
     styles:
-      - 'unsafe-inline'
+      - unsafe-inline

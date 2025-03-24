@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { Modal, Table, Button, Tag } from 'rsuite';
 import { router } from '@forge/bridge';
 import UserAvatar from './components/UserAvatar';
-import './requirement.css';
+import './app.css';
+import './IssuesModal.css';
 
 const { Column, HeaderCell, Cell } = Table;
 
 const StatusCell = ({ rowData, dataKey, ...props }) => {
   const isDone = rowData.isDone;
   return (
-    <Cell {...props}>
+    <Cell {...props} className="clickable-cell">
       <Tag color={isDone ? 'green' : 'orange'}>
         {rowData[dataKey]}
       </Tag>
@@ -19,7 +20,7 @@ const StatusCell = ({ rowData, dataKey, ...props }) => {
 
 const AssigneeCell = ({ rowData, ...props }) => {
   return (
-    <Cell {...props}>
+    <Cell {...props} className="clickable-cell">
       <UserAvatar user={rowData.assignee} />
     </Cell>
   );
@@ -48,11 +49,11 @@ const IssuesModal = ({ show, onClose, issues = [] }) => {
         >
           <Column flexGrow={1}>
             <HeaderCell>Issue Key</HeaderCell>
-            <Cell dataKey="key" />
+            <Cell dataKey="key" className="clickable-cell" />
           </Column>
           <Column flexGrow={2}>
             <HeaderCell>Summary</HeaderCell>
-            <Cell dataKey="summary" />
+            <Cell dataKey="summary" className="clickable-cell" />
           </Column>
           <Column flexGrow={1}>
             <HeaderCell>Status</HeaderCell>
@@ -60,7 +61,7 @@ const IssuesModal = ({ show, onClose, issues = [] }) => {
           </Column>
           <Column flexGrow={1}>
             <HeaderCell>Priority</HeaderCell>
-            <Cell dataKey="priority" />
+            <Cell dataKey="priority" className="clickable-cell" />
           </Column>
           <Column flexGrow={1}>
             <HeaderCell>Assignee</HeaderCell>
@@ -69,7 +70,7 @@ const IssuesModal = ({ show, onClose, issues = [] }) => {
         </Table>
       </Modal.Body>
       <Modal.Footer>
-        <Button onClick={onClose} appearance="primary">
+        <Button onClick={onClose} appearance="primary" className="cream-primary-btn">
           Close
         </Button>
       </Modal.Footer>

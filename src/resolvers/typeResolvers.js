@@ -1,10 +1,15 @@
 import { storage } from '@forge/api';
 import { generateUniqueId } from '../utils';
-
-const TYPES_STORAGE_KEY = 'types';
+import { TYPES_STORAGE_KEY } from '../config';
+import { getFromCache, updateCache } from '../cache';
 
 // Get all types
 export const getTypes = async () => {
+  const cachedTypes = getFromCache('types');
+  if (cachedTypes !== null) {
+    return cachedTypes;
+  }
+  
   const storedData = await storage.get(TYPES_STORAGE_KEY);
   return storedData || [];
 };
@@ -22,6 +27,7 @@ export const addType = async ({ payload }) => {
   const updatedData = [...storedData, newItem];
 
   await storage.set(TYPES_STORAGE_KEY, updatedData);
+  await updateCache([TYPES_STORAGE_KEY]);
   return newItem;
 };
 
@@ -32,6 +38,7 @@ export const updateType = async ({ payload }) => {
   const updatedData = storedData.map((item) => (item.id === id ? { ...item, name, color } : item));
 
   await storage.set(TYPES_STORAGE_KEY, updatedData);
+  await updateCache([TYPES_STORAGE_KEY]);
   return updatedData;
 };
 
@@ -42,5 +49,6 @@ export const removeType = async ({ payload }) => {
   const updatedData = storedData.filter((item) => item.id !== id);
 
   await storage.set(TYPES_STORAGE_KEY, updatedData);
+  await updateCache([TYPES_STORAGE_KEY]);
   return updatedData;
 }; 

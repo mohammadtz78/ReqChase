@@ -1,0 +1,16 @@
+/* Issues Modal Styles */
+.issues-card .issues-icon {
+  margin: 15px auto;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 60px;
+}
+
+.issues-card .issues-icon i {
+  font-size: 48px;
+  color: #3498db;
+} 

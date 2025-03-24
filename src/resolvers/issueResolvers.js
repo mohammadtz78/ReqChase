@@ -1,14 +1,13 @@
 import { storage, route } from '@forge/api';
 import api from '@forge/api';
-
-const REQUIREMENT_ISSUE_STORAGE_KEY = 'requirement-issue-join';
+import { REQUIREMENT_ISSUE_STORAGE_KEY, USER_REQUIREMENTS_STORAGE_KEY } from '../config';
 
 // Get assigned requirements for an issue
 export const getAssignedRequirements = async ({ payload }) => {
   const { issueId } = payload;
   const storedData = (await storage.get(REQUIREMENT_ISSUE_STORAGE_KEY)) || {};
   const requirementIds = storedData[issueId] || [];
-  const userRequirements = (await storage.get('user-requirements')) || [];
+  const userRequirements = (await storage.get(USER_REQUIREMENTS_STORAGE_KEY)) || [];
   const requirementDict = {};
   userRequirements.forEach(req => {
     requirementDict[req.id] = req;
@@ -88,7 +87,7 @@ export const getRequirementIssues = async ({ payload }) => {
         assignee: assignee ? {
           accountId: assignee.accountId,
           displayName: assignee.displayName,
-          avatarUrl: assignee.avatarUrls['16x16']
+          avatarUrl: assignee.avatarUrls['48x48']
         } : null,
         isDone: ['Done', 'Closed', 'Resolved'].includes(issue.fields.status.name)
       };

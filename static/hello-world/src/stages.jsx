@@ -4,19 +4,11 @@ import { Input, Button, List } from "rsuite";
 import './app.css';
 
 const PREDEFINED_COLORS = [
-    "#FF6B6B", // Coral Red
-    "#4ECDC4", // Turquoise
-    "#45B7D1", // Sky Blue
-    "#96CEB4", // Sage Green
-    "#FFEEAD", // Cream Yellow
-    "#D4A5A5", // Dusty Rose
-    "#9B59B6", // Purple
-    "#3498DB", // Blue
-    "#E67E22", // Orange
-    "#2ECC71"  // Green
+    "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEEAD",
+    "#D4A5A5", "#9B59B6", "#3498DB", "#E67E22", "#2ECC71"
 ];
 
-const Types = () => {
+const Stages = () => {
     const [items, setItems] = useState([]);
     const [newItem, setNewItem] = useState("");
     const [editIndex, setEditIndex] = useState(null);
@@ -24,25 +16,23 @@ const Types = () => {
     const [selectedColor, setSelectedColor] = useState(PREDEFINED_COLORS[0]);
 
     useEffect(() => {
-        // Fetch initial types from storage
-        invoke("getTypes").then(setItems);
+        invoke("getStages").then(setItems);
     }, []);
 
     const addItem = async () => {
         if (newItem.trim()) {
-            const newTypeItem = await invoke("addType", { 
+            const newStageItem = await invoke("addStage", { 
                 name: newItem.trim(),
                 color: selectedColor
             });
-            setItems([...items, newTypeItem]);
+            setItems([...items, newStageItem]);
             setNewItem("");
-            // Randomly select next color
             setSelectedColor(PREDEFINED_COLORS[Math.floor(Math.random() * PREDEFINED_COLORS.length)]);
         }
     };
 
     const removeItem = async (id) => {
-        const response = await invoke("removeType", { id });
+        const response = await invoke("removeStage", { id });
         setItems(response);
     };
 
@@ -59,7 +49,7 @@ const Types = () => {
             updatedItems[index].color = selectedColor;
             setItems(updatedItems);
             setEditIndex(null);
-            await invoke("updateType", { 
+            await invoke("updateStage", { 
                 id: updatedItems[index].id, 
                 name: editValue.trim(),
                 color: selectedColor
@@ -69,13 +59,13 @@ const Types = () => {
 
     return (
         <div style={{ padding: "20px", maxWidth: "400px", margin: "auto" }}>
-            <h2>Types</h2>
+            <h2>Stages</h2>
             <br/>
             <div style={{ marginBottom: "20px" }}>
                 <Input
                     value={newItem}
                     onChange={(value) => setNewItem(value)}
-                    placeholder="Enter a type name"
+                    placeholder="Enter a stage name"
                 />
                 <div style={{ marginTop: "10px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
                     {PREDEFINED_COLORS.map((color) => (
@@ -94,7 +84,7 @@ const Types = () => {
                     ))}
                 </div>
                 <Button onClick={addItem} appearance="primary" style={{ marginTop: "10px" }}>
-                    Add Type
+                    Add Stage
                 </Button>
             </div>
             <List bordered>
@@ -149,4 +139,4 @@ const Types = () => {
     );
 };
 
-export default Types; 
+export default Stages; 

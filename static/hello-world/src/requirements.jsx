@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { invoke, view } from '@forge/bridge';
-import { Button, Table, Modal, Input, Notification } from 'rsuite';
+import { Button, Table, Notification, Progress } from 'rsuite';
 import { useNavigate } from "react-router";
 import Loader from './loader';
+import './app.css';
+import './requirements.css';
 
 const Requirements = ({history}) => {
   const [requirements, setRequirements] = useState([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [newRequirement, setNewRequirement] = useState('');
-  const [newDescription, setNewDescription] = useState('');
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -31,28 +30,13 @@ const Requirements = ({history}) => {
     }
   };
 
-  const addRequirement = async () => {
-    if (newRequirement.trim() === '') {
-      Notification.warning({ title: 'Validation', description: 'Name is required.' });
-      return;
+  const deleteRequirement = async (id, event) => {
+    // Prevent the event from propagating to the row click handler
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
     }
-    try {
-      setLoading(true);
-      await invoke('addRequirement', { name: newRequirement, description: newDescription });
-      await fetchRequirements();
-      setNewRequirement('');
-      setNewDescription('');
-
-      setModalOpen(false);
-      Notification.success({ title: 'Success', description: 'Requirement added successfully.' });
-    } catch (error) {
-      Notification.error({ title: 'Error', description: 'Failed to add requirement.' });
-    }
-    setLoading(false);
-
-  };
-
-  const deleteRequirement = async (id) => {
+    
     try {
       setLoading(true);
 
@@ -69,68 +53,174 @@ const Requirements = ({history}) => {
     navigate(`/requirement/${data?.id}`);
   };
 
+  const addNewRequirement = () => {
+    navigate('/requirement/new');
+  };
 
-    return (
-        <div style={{ padding: '20px' }}>
-            <h1>User Requirements</h1>
-            <Button appearance="primary" style={{ float: 'right', marginBottom: '10px' }} onClick={() => setModalOpen(true)}>
-                Add Requirement
-            </Button>
-            {loading ? <Loader/> : (
-                <Table
-                    data={requirements}
-                    autoHeight
-                    bordered
-                    cellBordered
-                    hover={false}
-                    onRowClick={(data) => openRequirement(data)}
-                    sortColumn='name'
-                    style={{ marginTop: '20px', width: '100%' }}
+  // Add priority and importance options
+  const priorityColors = {
+    low: '#87CEEB',
+    medium: '#4682B4',
+    high: '#CD5C5C',
+    maximum: '#FF0000'
+  };
+
+  const importanceColors = {
+    low: '#87CEEB',
+    medium: '#4682B4',
+    high: '#CD5C5C',
+    maximum: '#FF0000'
+  };
+
+  return (
+    <div className="requirements-container">
+      <div className="requirements-header">
+        <h1>User Requirements</h1>
+        <Button appearance="primary" onClick={addNewRequirement}>
+          Add Requirement
+        </Button>
+      </div>
+      {loading ? <Loader/> : (
+        <Table
+          data={requirements}
+          autoHeight
+          bordered
+          cellBordered
+          hover={true}
+          onRowClick={(data) => openRequirement(data)}
+          sortColumn='name'
+          style={{ width: '100%' }}
+          rowClassName="requirements-table-row"
+        >
+          <Table.Column flexGrow={1} align="left">
+            <Table.HeaderCell>Name</Table.HeaderCell>
+            <Table.Cell dataKey="name" className="requirements-table-cell" />
+          </Table.Column>
+          <Table.Column flexGrow={1} align="left">
+            <Table.HeaderCell>Description</Table.HeaderCell>
+            <Table.Cell dataKey="description" className="requirements-table-cell" />
+          </Table.Column>
+          <Table.Column flexGrow={0.4} align="center">
+            <Table.HeaderCell>Type</Table.HeaderCell>
+            <Table.Cell>
+              {rowData => (
+                <span 
+                  className="type-tag"
+                  style={{
+                    backgroundColor: rowData.type?.color || '#e0e0e0',
+                    color: '#666',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}
                 >
-                    <Table.Column flexGrow={1} align="left">
-                        <Table.HeaderCell>Name</Table.HeaderCell>
-                        <Table.Cell dataKey="name" />
-                    </Table.Column>
-                    <Table.Column flexGrow={1} align="left">
-                        <Table.HeaderCell>Description</Table.HeaderCell>
-                        <Table.Cell dataKey="description" />
-                    </Table.Column>
-                    <Table.Column flexGrow={0.5} align="center" verticalAlign='middle' >
-                        <Table.HeaderCell>Actions</Table.HeaderCell>
-                        <Table.Cell>
-                            {rowData => (
-                                 <Button size='xs' appearance="primary" color="red" onClick={() => deleteRequirement(rowData.id)}>
-                                    Delete
-                                </Button>
-                            )}
-                        </Table.Cell>
-                    </Table.Column>
-                </Table>
-            )}
-            <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-                <Modal.Header>
-                    <Modal.Title>Add User Requirement</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Input
-                        placeholder="Requirement Name"
-                        value={newRequirement}
-                        onChange={(value) => setNewRequirement(value)}
-                    />
-                    <br />
-                    <Input
-                        placeholder="Requirement Description"
-                        value={newDescription}
-                        onChange={(value) => setNewDescription(value)}
-                    />
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button appearance="primary" onClick={addRequirement}>Add</Button>
-                    <Button onClick={() => setModalOpen(false)} appearance="subtle">Cancel</Button>
-                </Modal.Footer>
-            </Modal>
-        </div>
-    )
+                  {rowData.type?.name || '-'}
+                </span>
+              )}
+            </Table.Cell>
+          </Table.Column>
+          <Table.Column flexGrow={0.4} align="center">
+            <Table.HeaderCell>Stage</Table.HeaderCell>
+            <Table.Cell>
+              {rowData => (
+                <span 
+                  className="stage-tag"
+                  style={{
+                    backgroundColor: rowData.stage?.color || '#e0e0e0',
+                    color: '#666',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}
+                >
+                  {rowData.stage?.name || '-'}
+                </span>
+              )}
+            </Table.Cell>
+          </Table.Column>
+          <Table.Column flexGrow={0.4} align="center">
+            <Table.HeaderCell>Status</Table.HeaderCell>
+            <Table.Cell>
+              {rowData => (
+                <span 
+                  className="status-tag"
+                  style={{
+                    backgroundColor: rowData.status?.color || '#e0e0e0',
+                    color: '#666',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}
+                >
+                  {rowData.status?.name || '-'}
+                </span>
+              )}
+            </Table.Cell>
+          </Table.Column>
+          <Table.Column flexGrow={0.4} align="center">
+            <Table.HeaderCell>Priority</Table.HeaderCell>
+            <Table.Cell>
+              {rowData => (
+                <span 
+                  className="priority-tag"
+                  style={{
+                    backgroundColor: rowData.priority ? priorityColors[rowData.priority] : '#e0e0e0',
+                    color: rowData.priority ? '#fff' : '#666',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}
+                >
+                  {rowData.priority ? (rowData.priority.charAt(0).toUpperCase() + rowData.priority.slice(1)) : '-'}
+                </span>
+              )}
+            </Table.Cell>
+          </Table.Column>
+          <Table.Column flexGrow={0.4} align="center">
+            <Table.HeaderCell>Importance</Table.HeaderCell>
+            <Table.Cell>
+              {rowData => (
+                <span 
+                  className="importance-tag"
+                  style={{
+                    backgroundColor: rowData.importance ? importanceColors[rowData.importance] : '#e0e0e0',
+                    color: rowData.importance ? '#fff' : '#666',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}
+                >
+                  {rowData.importance ? (rowData.importance.charAt(0).toUpperCase() + rowData.importance.slice(1)) : '-'}
+                </span>
+              )}
+            </Table.Cell>
+          </Table.Column>
+          <Table.Column flexGrow={0.5} align="center">
+            <Table.HeaderCell>Progress</Table.HeaderCell>
+            <Table.Cell>
+              {rowData => (
+                <Progress.Line 
+                  percent={rowData.progress || 0} 
+                  status={rowData.progress === 100 ? 'success' : 'active'}
+                  style={{ width: '100%' }}
+                />
+              )}
+            </Table.Cell>
+          </Table.Column>
+          <Table.Column flexGrow={0.4} align="center" verticalAlign='middle' >
+            <Table.HeaderCell>Actions</Table.HeaderCell>
+            <Table.Cell>
+              {rowData => (
+                <Button size='xs' appearance="primary" color="red" onClick={(event) => deleteRequirement(rowData.id, event)}>
+                  Delete
+                </Button>
+              )}
+            </Table.Cell>
+          </Table.Column>
+        </Table>
+      )}
+    </div>
+  )
 }
 
 export default Requirements
