@@ -39,6 +39,24 @@
   cursor: pointer !important;
 }
 
+/* Parent row styling for dashboard */
+.parent-row .rs-table-cell {
+  background-color: #f0f0f0 !important;
+}
+
+.parent-row:hover .rs-table-cell {
+  background-color: #e8e8e8 !important;
+}
+
+/* Target data-depth attribute directly */
+.rs-table-row[data-depth="0"] .rs-table-cell {
+  background-color: #f0f0f0 !important;
+}
+
+.rs-table-row[data-depth="0"]:hover .rs-table-cell {
+  background-color: #e8e8e8 !important;
+}
+
 /* Type Selector Styles */
 .type-selector-menu .rs-picker-select-menu-item {
   padding: 2px 10px !important;

@@ -5,7 +5,7 @@ import { USER_REQUIREMENTS_STORAGE_KEY, REQUIREMENT_ISSUE_STORAGE_KEY } from '..
 import { getTypes } from './typeResolvers';
 import { getStages } from './stageResolvers';
 import { getStatuses } from './statusResolvers';
-import { fetchAndCacheUsers, getFromCache } from '../cache';
+import { fetchAndCacheUsers, getFromCache, getUserFromCache } from '../cache';
 
 
 // Get all user requirements
@@ -19,6 +19,7 @@ export const getRequirements = async () => {
   const types = getFromCache('types') || await getTypes();
   const stages = getFromCache('stages') || await getStages();
   const statuses = getFromCache('statuses') || await getStatuses();
+  const users = await getUserFromCache()
 
   const typesMap = types.reduce((acc, type) => {
     acc[type.id] = type;
@@ -85,19 +86,27 @@ export const getRequirements = async () => {
       progress = Math.round((completedIssues / relatedIssueIds.length) * 100);
     }
 
+    // Get assignee data from users cache
+    const assignee = requirement.assigneeId ? users[requirement.assigneeId] || null : null;
+
     return {
       ...requirement,
       progress,
       type: requirement.typeId ? (typesMap[requirement.typeId] || { id: requirement.typeId, name: '-', color: '#e0e0e0' }) : { name: '-', color: '#e0e0e0' },
       stage: requirement.stageId ? (stagesMap[requirement.stageId] || { name: '-', color: '#e0e0e0' }) : { name: '-', color: '#e0e0e0' },
-      status: requirement.statusId ? (statusesMap[requirement.statusId] || { name: '-', color: '#e0e0e0' }) : { name: '-', color: '#e0e0e0' }
+      status: requirement.statusId ? (statusesMap[requirement.statusId] || { name: '-', color: '#e0e0e0' }) : { name: '-', color: '#e0e0e0' },
+      assignee: assignee ? {
+        accountId: assignee.accountId,
+        displayName: assignee.displayName,
+        avatarUrl: assignee.avatarUrl
+      } : null
     };
   });
 };
 
 // Add a new user requirement
 export const addRequirement = async ({ payload, context }) => {
-  const { name, description, typeId, stageId, statusId, size } = payload;
+  const { name, description, typeId, stageId, statusId, size, assigneeId } = payload;
   const storedData = (await storage.get(USER_REQUIREMENTS_STORAGE_KEY)) || [];
   const user = context?.accountId;
   const now = new Date();
@@ -113,6 +122,7 @@ export const addRequirement = async ({ payload, context }) => {
     stageId,
     statusId,
     size,
+    assigneeId,
     logs: [`{{@${user}@}} created requirement {{#${dateStr}#}}`]
   };
   const updatedData = [...storedData, newRequirement];
@@ -164,7 +174,7 @@ export const getRequirement = async ({ payload }) => {
   }
 
   // Get users from cache to transform IDs to display names in logs
-  const users = getFromCache('users') || {};
+  const users = await getUserFromCache();
   
   // Transform logs to use display names
   const transformedLogs = requirement?.logs?.map?.(log => {
@@ -182,7 +192,7 @@ export const getRequirement = async ({ payload }) => {
 
 // Update an existing requirement
 export const updateRequirement = async ({ payload, context }) => {
-  const { id, name, description, validationChecks, verificationChecks, typeId, stageId, statusId, priority, importance, size } = payload;
+  const { id, name, description, validationChecks, verificationChecks, typeId, stageId, statusId, priority, importance, size, assigneeId } = payload;
   const storedData = (await storage.get(USER_REQUIREMENTS_STORAGE_KEY)) || [];
 
   const index = storedData.findIndex((req) => req.id === id);
@@ -202,7 +212,8 @@ export const updateRequirement = async ({ payload, context }) => {
     statusId,
     priority,
     importance,
-    size
+    size,
+    assigneeId
   };
 
   // Generate logs for changes
@@ -215,6 +226,7 @@ export const updateRequirement = async ({ payload, context }) => {
   const types = getFromCache('types') || await getTypes();
   const stages = getFromCache('stages') || await getStages();
   const statuses = getFromCache('statuses') || await getStatuses();
+  const users = await getUserFromCache();
 
   // Create lookup maps for faster access
   const typesMap = types.reduce((acc, type) => {
@@ -263,6 +275,11 @@ export const updateRequirement = async ({ payload, context }) => {
   if (size !== oldRequirement.size) {
     logs.push(`{{@${user}@}} changed size from "${oldRequirement.size || 'None'}" to "${size || 'None'}" {{#${dateStr}#}}`);
   }
+  if (assigneeId !== oldRequirement.assigneeId) {
+    const oldAssignee = users[oldRequirement.assigneeId]?.displayName || 'None';
+    const newAssignee = users[assigneeId]?.displayName || 'None';
+    logs.push(`{{@${user}@}} changed assignee from "${oldAssignee}" to "${newAssignee}" {{#${dateStr}#}}`);
+  }
 
   // Track checklist changes
   if (JSON.stringify(validationChecks) !== JSON.stringify(oldRequirement.validationChecks)) {
@@ -284,6 +301,28 @@ export const getDashboardData = async ({ payload }) => {
   const requirementIssueMappings = await storage.get('requirement-issue-join') || {};
   let issueData = { d: Object.keys(requirementIssueMappings) };
   let issueDataDict = {};
+
+  // Get types, stages, and statuses from cache
+  const types = getFromCache('types') || await getTypes();
+  const stages = getFromCache('stages') || await getStages();
+  const statuses = getFromCache('statuses') || await getStatuses();
+  const users = await getUserFromCache();
+
+  // Create lookup maps for faster access
+  const typesMap = types.reduce((acc, type) => {
+    acc[type.id] = type;
+    return acc;
+  }, {});
+
+  const stagesMap = stages.reduce((acc, stage) => {
+    acc[stage.id] = stage;
+    return acc;
+  }, {});
+
+  const statusesMap = statuses.reduce((acc, status) => {
+    acc[status.id] = status;
+    return acc;
+  }, {});
 
   try {
     const response = await api.asApp().requestJira(route`/rest/api/3/issue/bulkfetch`, {
@@ -334,13 +373,16 @@ export const getDashboardData = async ({ payload }) => {
   }
 
   const data = requirements.map((requirement) => {
-    const { id, name, description } = requirement;
+    const { id, name, description, typeId, stageId, statusId, priority, assigneeId } = requirement;
     const issueIds = [];
     for (const [issueId, requirements] of Object.entries(requirementIssueMappings)) {
       if (requirements?.includes?.(id)) {
         issueIds.push(issueId);
       }
     }
+
+    // Get assignee data from users cache
+    const assignee = assigneeId ? users[assigneeId] || null : null;
 
     const children = issueIds.map((issueId) => ({
       id: `${id}-${issueId}`,
@@ -352,6 +394,15 @@ export const getDashboardData = async ({ payload }) => {
       id,
       name,
       description,
+      type: typeId ? (typesMap[typeId] || { id: typeId, name: '-', color: '#e0e0e0' }) : { name: '-', color: '#e0e0e0' },
+      stage: stageId ? (stagesMap[stageId] || { name: '-', color: '#e0e0e0' }) : { name: '-', color: '#e0e0e0' },
+      status: statusId ? (statusesMap[statusId] || { name: '-', color: '#e0e0e0' }) : { name: '-', color: '#e0e0e0' },
+      priority,
+      assignee: assignee ? {
+        accountId: assignee.accountId,
+        displayName: assignee.displayName,
+        avatarUrl: assignee.avatarUrl
+      } : null,
       children
     };
   });

@@ -36,11 +36,14 @@ export const initializeCache = async () => {
   await Promise.all(promises);
 };
 
+export const getUserFromCache = async () => {
+  if (!cache.users) {
+    return await fetchAndCacheUsers()
+  }
+  return cache.users
+}
 // Get data from cache
 export const getFromCache = (key) => {
-  if(key==="users" && !cache.users){
-    return fetchAndCacheUsers()
-  }
   return cache[key];
 };
 

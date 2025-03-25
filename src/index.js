@@ -10,6 +10,8 @@ import * as typeResolvers from './resolvers/typeResolvers';
 import * as issueResolvers from './resolvers/issueResolvers';
 import * as stageResolvers from './resolvers/stageResolvers';
 import * as statusResolvers from './resolvers/statusResolvers';
+import * as userResolvers from './resolvers/userResolvers';
+import * as versionResolvers from './resolvers/versionResolvers';
 
 const resolver = new Resolver();
 
@@ -33,6 +35,7 @@ resolver.define('getDashboardData', requirementResolvers.getDashboardData);
 resolver.define('getValidationChecklist', validationResolvers.getValidationChecklist);
 resolver.define('addValidationChecklistItem', validationResolvers.addValidationChecklistItem);
 resolver.define('updateValidationChecklistItem', validationResolvers.updateValidationChecklistItem);
+resolver.define('removeValidationChecklistItem', validationResolvers.removeValidationChecklistItem);
 
 // Register verification checklist resolvers
 resolver.define('getVerificationChecklist', verificationResolvers.getVerificationChecklist);
@@ -62,5 +65,14 @@ resolver.define('removeStatus', statusResolvers.removeStatus);
 resolver.define('getAssignedRequirements', issueResolvers.getAssignedRequirements);
 resolver.define('assignRequirements', issueResolvers.assignRequirements);
 resolver.define('getRequirementIssues', issueResolvers.getRequirementIssues);
+
+// Register user resolvers
+resolver.define('getUsers', userResolvers.getUsers);
+
+// Register version resolvers
+resolver.define('getVersions', versionResolvers.getVersions);
+resolver.define('createVersion', versionResolvers.createVersion);
+resolver.define('removeVersion', versionResolvers.removeVersion);
+resolver.define('restoreVersion', versionResolvers.restoreVersion);
 
 export const handler = resolver.getDefinitions();

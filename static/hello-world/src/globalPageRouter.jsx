@@ -11,6 +11,7 @@ import RequirementViewEdit from './requirement';
 import Types from './types';
 import Stages from './stages';
 import Status from './status';
+import BaselineVersions from './baselineVersions';
 
 
 const GlobalPageRouter = () => {
@@ -63,6 +64,7 @@ const GlobalPageRouter = () => {
             <Route path="/types" element={<Types/>}></Route>
             <Route path="/stages" element={<Stages/>}></Route>
             <Route path="/status" element={<Status/>}></Route>
+            <Route path="/versions" element={<BaselineVersions/>}></Route>
           </Routes>
         </Router>
       ) : (

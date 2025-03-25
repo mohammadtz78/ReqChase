@@ -27,6 +27,8 @@ modules:
           route: /stages
         - title: Requirement Status
           route: /status
+        - title: Baseline Versions
+          route: /versions
   function:
     - key: resolver
       handler: index.handler

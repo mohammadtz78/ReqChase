@@ -18,6 +18,7 @@ const RequirementViewEdit = () => {
   const [types, setTypes] = useState([]);
   const [stages, setStages] = useState([]);
   const [statuses, setStatuses] = useState([]);
+  const [users, setUsers] = useState([]);
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showIssuesModal, setShowIssuesModal] = useState(false);
@@ -32,7 +33,8 @@ const RequirementViewEdit = () => {
     statusId: null,
     priority: null,
     importance: null,
-    size: ''
+    size: '',
+    assigneeId: null
   });
   const [validationChecklist, setValidationChecklist] = useState([]);
   const [verificationChecklist, setVerificationChecklist] = useState([]);
@@ -61,6 +63,7 @@ const RequirementViewEdit = () => {
     fetchTypes();
     fetchStages();
     fetchStatuses();
+    fetchUsers();
   }, [id]);
 
   const fetchTypes = async () => {
@@ -87,6 +90,15 @@ const RequirementViewEdit = () => {
       setStatuses(fetchedStatuses);
     } catch (error) {
       Notification.error({ title: 'Error', description: 'Failed to fetch statuses.' });
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const fetchedUsers = await invoke('getUsers');
+      setUsers(fetchedUsers);
+    } catch (error) {
+      Notification.error({ title: 'Error', description: 'Failed to fetch users.' });
     }
   };
 
@@ -189,7 +201,8 @@ const RequirementViewEdit = () => {
         statusId: fetchedRequirement.statusId,
         priority: fetchedRequirement.priority,
         importance: fetchedRequirement.importance,
-        size: fetchedRequirement.size || ''
+        size: fetchedRequirement.size || '',
+        assigneeId: fetchedRequirement.assigneeId
       });
     } catch (error) {
       Notification.error({ title: 'Error', description: 'Failed to fetch requirement.' });
@@ -217,7 +230,8 @@ const RequirementViewEdit = () => {
           statusId: editedRequirement.statusId,
           priority: editedRequirement.priority,
           importance: editedRequirement.importance,
-          size: editedRequirement.size
+          size: editedRequirement.size,
+          assigneeId: editedRequirement.assigneeId
         });
         setIsEditing(false);
         navigate(`/requirement/${newRequirement.id}`);
@@ -233,7 +247,8 @@ const RequirementViewEdit = () => {
           statusId: editedRequirement.statusId,
           priority: editedRequirement.priority,
           importance: editedRequirement.importance,
-          size: editedRequirement.size
+          size: editedRequirement.size,
+          assigneeId: editedRequirement.assigneeId
         });
         setRequirement(updatedRequirement);
         setIsEditing(false);
@@ -486,13 +501,35 @@ const RequirementViewEdit = () => {
                 </Col>
               </Row>
               <Row style={{ marginTop: '10px' }}>
-                <Col xs={24}>
+                <Col xs={12}>
                   <div className="selector-label">Size:</div>
                   <Input 
                     value={editedRequirement.size}
                     onChange={(value) => setEditedRequirement({ ...editedRequirement, size: value })}
                     placeholder="Enter project size"
                     className="size-input"
+                  />
+                </Col>
+                <Col xs={12}>
+                  <div className="selector-label">Assignee:</div>
+                  <SelectPicker 
+                    data={users.map(user => ({
+                      label: user.displayName,
+                      value: user.accountId,
+                      avatarUrl: user.avatarUrl
+                    }))}
+                    value={editedRequirement.assigneeId}
+                    onChange={(value) => setEditedRequirement({ ...editedRequirement, assigneeId: value })}
+                    className="type-selector"
+                    renderMenuItem={(label, item) => (
+                      <div className="type-menu-item">
+                        <img src={item.avatarUrl} alt={label} style={{ width: '24px', height: '24px', marginRight: '8px' }} />
+                        {label}
+                      </div>
+                    )}
+                    menuClassName="type-selector-menu"
+                    placeholder="Select Assignee"
+                    block
                   />
                 </Col>
               </Row>
@@ -588,6 +625,19 @@ const RequirementViewEdit = () => {
               <div className="info-item">
                 <div className="info-label">Size:</div>
                 <div className="size-display">{getCurrentSize()}</div>
+              </div>
+              <div className="info-item">
+                <div className="info-label">Assignee:</div>
+                {requirement?.assigneeId && users.find(u => u.accountId === requirement.assigneeId) && (
+                  <div className="assignee-display">
+                    <img 
+                      src={users.find(u => u.accountId === requirement.assigneeId).avatarUrl} 
+                      alt={users.find(u => u.accountId === requirement.assigneeId).displayName}
+                      style={{ width: '24px', height: '24px', marginRight: '8px' }}
+                    />
+                    {users.find(u => u.accountId === requirement.assigneeId).displayName}
+                  </div>
+                )}
               </div>
             </div>
             <div className="description-content">

@@ -9,6 +9,7 @@
     "eslint-plugin-react-hooks": "^4.6.0"
   },
   "dependencies": {
-    "@forge/resolver": "1.6.2"
+    "@forge/resolver": "1.6.2",
+    "pako": "^2.1.0"
   }
 }
