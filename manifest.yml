@@ -5,13 +5,14 @@ modules:
       resolver:
         function: resolver
       title: reqchase
+      placement: "top-panel"
       icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
   jira:globalPage:
-    - key: reqchase-2-hello-world-page
+    - key: reqchase-hello-world-page
       resource: main
       resolver:
         function: resolver
-      title: ReqChase 2
+      title: ReqChase
       pages:
         - title: Requirement Management
           route: /requirements

@@ -4,7 +4,7 @@ import { STATUS_STORAGE_KEY } from '../config';
 import { getFromCache, updateCache } from '../cache';
 
 export const getStatuses = async () => {
-  const cachedStatuses = getFromCache('statuses');
+  const cachedStatuses = await getFromCache('statuses');
   if (cachedStatuses !== null) {
     return cachedStatuses;
   }

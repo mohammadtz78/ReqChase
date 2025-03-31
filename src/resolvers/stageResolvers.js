@@ -4,7 +4,7 @@ import { STAGES_STORAGE_KEY } from '../config';
 import { getFromCache, updateCache } from '../cache';
 
 export const getStages = async () => {
-  const cachedStages = getFromCache('stages');
+  const cachedStages = await getFromCache('stages');
   if (cachedStages !== null) {
     return cachedStages;
   }

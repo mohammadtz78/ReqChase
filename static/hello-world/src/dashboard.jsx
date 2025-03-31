@@ -81,7 +81,7 @@ const dashboard = () => {
                                     <span 
                                         className="status-tag"
                                         style={{
-                                            backgroundColor: rowData.status?.color || '#e0e0e0',
+                                            backgroundColor: rowData.status?.color || '#e2e2e2',
                                             color: '#666',
                                             padding: '4px 8px',
                                             borderRadius: '4px',
@@ -100,7 +100,7 @@ const dashboard = () => {
                                     <span 
                                         className="priority-tag"
                                         style={{
-                                            backgroundColor: rowData.priority ? priorityColors[rowData.priority] : '#e0e0e0',
+                                            backgroundColor: rowData.priority ? priorityColors[rowData.priority]||'#393939' : '#e0e0e0',
                                             color: rowData.priority ? '#fff' : '#666',
                                             padding: '4px 8px',
                                             borderRadius: '4px',

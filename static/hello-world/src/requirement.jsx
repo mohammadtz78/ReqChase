@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { invoke, view } from '@forge/bridge';
-import { Button, Input, Notification, Panel, Checkbox, Divider, Grid, Row, Col, SelectPicker, Tag, Modal, Progress } from 'rsuite';
+import { Button, Input, Panel, Checkbox, Divider, Grid, Row, Col, SelectPicker, Tag, Modal, Progress } from 'rsuite';
 import Loader from './loader';
 import IssuesModal from './IssuesModal';
 import ActivityLog from './ActivityLog';
 import './app.css';
 import './requirement.css';
 
-const RequirementViewEdit = () => {
+const RequirementViewEdit = ({ notifier }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isNewRequirement = id === 'new';
@@ -23,10 +23,10 @@ const RequirementViewEdit = () => {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showIssuesModal, setShowIssuesModal] = useState(false);
   const [issues, setIssues] = useState([]);
-  const [editedRequirement, setEditedRequirement] = useState({ 
-    name: '', 
-    description: '', 
-    validationChecks: [], 
+  const [editedRequirement, setEditedRequirement] = useState({
+    name: '',
+    description: '',
+    validationChecks: [],
     verificationChecks: [],
     typeId: null,
     stageId: null,
@@ -59,48 +59,24 @@ const RequirementViewEdit = () => {
       fetchRequirement();
       fetchIssues();
     }
-    fetchChecklists();
-    fetchTypes();
-    fetchStages();
-    fetchStatuses();
-    fetchUsers();
+    fetchData()
+
   }, [id]);
 
-  const fetchTypes = async () => {
+  const fetchData = async () => {
     try {
-      const fetchedTypes = await invoke('getTypes');
-      setTypes(fetchedTypes);
-    } catch (error) {
-      Notification.error({ title: 'Error', description: 'Failed to fetch types.' });
-    }
-  };
+      const fetchedData = await invoke('getCachedInformation');
+      setTypes(fetchedData?.types)
+      setStages(fetchedData?.stages)
+      setStatuses(fetchedData?.statuses)
+      setValidationChecklist(fetchedData?.validationChecklist)
+      setVerificationChecklist(fetchedData?.verificationChecklist)
+      setUsers(fetchedData?.users)
 
-  const fetchStages = async () => {
-    try {
-      const fetchedStages = await invoke('getStages');
-      setStages(fetchedStages);
     } catch (error) {
-      Notification.error({ title: 'Error', description: 'Failed to fetch stages.' });
+      notifier('error', 'Failed to fetch data');
     }
-  };
-
-  const fetchStatuses = async () => {
-    try {
-      const fetchedStatuses = await invoke('getStatuses');
-      setStatuses(fetchedStatuses);
-    } catch (error) {
-      Notification.error({ title: 'Error', description: 'Failed to fetch statuses.' });
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const fetchedUsers = await invoke('getUsers');
-      setUsers(fetchedUsers);
-    } catch (error) {
-      Notification.error({ title: 'Error', description: 'Failed to fetch users.' });
-    }
-  };
+  }
 
   // Helper function to determine if a color is dark
   const isColorDark = (color) => {
@@ -173,26 +149,13 @@ const RequirementViewEdit = () => {
     }
   }));
 
-  const fetchChecklists = async () => {
-    try {
-      const [validationItems, verificationItems] = await Promise.all([
-        invoke('getValidationChecklist'),
-        invoke('getVerificationChecklist')
-      ]);
-      setValidationChecklist(validationItems);
-      setVerificationChecklist(verificationItems);
-    } catch (error) {
-      Notification.error({ title: 'Error', description: 'Failed to fetch checklists.' });
-    }
-  };
-
   const fetchRequirement = async () => {
     setLoading(true);
     try {
       const fetchedRequirement = await invoke('getRequirement', { id });
       setRequirement(fetchedRequirement);
-      setEditedRequirement({ 
-        name: fetchedRequirement?.name, 
+      setEditedRequirement({
+        name: fetchedRequirement?.name,
         description: fetchedRequirement?.description,
         validationChecks: fetchedRequirement?.validationChecks || [],
         verificationChecks: fetchedRequirement?.verificationChecks || [],
@@ -205,7 +168,7 @@ const RequirementViewEdit = () => {
         assigneeId: fetchedRequirement.assigneeId
       });
     } catch (error) {
-      Notification.error({ title: 'Error', description: 'Failed to fetch requirement.' });
+      notifier('error', 'Failed to fetch requirement');
     } finally {
       setLoading(false);
     }
@@ -213,15 +176,15 @@ const RequirementViewEdit = () => {
 
   const saveRequirement = async () => {
     if (!editedRequirement.name.trim()) {
-      Notification.warning({ title: 'Validation', description: 'Name is required.' });
+      notifier('warning', 'Requirement name is required');
       return;
     }
 
     setLoading(true);
     try {
       if (isNewRequirement) {
-        const newRequirement = await invoke('addRequirement', { 
-          name: editedRequirement.name, 
+        const newRequirement = await invoke('addRequirement', {
+          name: editedRequirement.name,
           description: editedRequirement.description,
           validationChecks: editedRequirement.validationChecks,
           verificationChecks: editedRequirement.verificationChecks,
@@ -236,9 +199,9 @@ const RequirementViewEdit = () => {
         setIsEditing(false);
         navigate(`/requirement/${newRequirement.id}`);
       } else {
-        const updatedRequirement = await invoke('updateRequirement', { 
-          id, 
-          name: editedRequirement.name, 
+        const updatedRequirement = await invoke('updateRequirement', {
+          id,
+          name: editedRequirement.name,
           description: editedRequirement.description,
           validationChecks: editedRequirement.validationChecks,
           verificationChecks: editedRequirement.verificationChecks,
@@ -252,52 +215,76 @@ const RequirementViewEdit = () => {
         });
         setRequirement(updatedRequirement);
         setIsEditing(false);
-        Notification.success({ title: 'Success', description: 'Requirement updated successfully.' });
+        notifier('success', 'Requirement updated successfully');
       }
     } catch (error) {
-      Notification.error({ title: 'Error', description: `Failed to ${isNewRequirement ? 'add' : 'update'} requirement.` });
+      notifier('error', 'Failed to add/save requirement');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChecklistChange = (type, itemId) => {
+  const handleChecklistChange = async (type, itemId) => {
     const field = type === 'validation' ? 'validationChecks' : 'verificationChecks';
     const currentChecks = [...editedRequirement[field]];
     const index = currentChecks.indexOf(itemId);
-    
+
     if (index === -1) {
       currentChecks.push(itemId);
     } else {
       currentChecks.splice(index, 1);
     }
 
-    setEditedRequirement({
-      ...editedRequirement,
-      [field]: currentChecks
-    });
-
     if (!isEditing) {
       // If not in editing mode, save immediately
-      invoke('updateRequirement', {
+      // setEditedRequirement(req=> {return {
+      //   ...req,
+      //   [field]: currentChecks
+      // }})
+      // setRequirement(req=> {return {
+      //   ...req,
+      //   [field]: currentChecks
+      // }})
+      
+      const response = await invoke('updateRequirement', {
+        ...editedRequirement,
         id,
         name: requirement.name,
         description: requirement.description,
         validationChecks: field === 'validationChecks' ? currentChecks : requirement.validationChecks,
         verificationChecks: field === 'verificationChecks' ? currentChecks : requirement.verificationChecks
-      }).then(() => {
-        setRequirement({
-          ...requirement,
-          [field]: currentChecks
-        });
-        Notification.success({ title: 'Success', description: 'Checklist updated successfully.' });
-      }).catch(() => {
-        Notification.error({ title: 'Error', description: 'Failed to update checklist.' });
+      })
+    } else {
+      setEditedRequirement({
+        ...editedRequirement,
+        [field]: currentChecks
       });
     }
   };
 
-  const ChecklistSection = ({ title, items, checkedItems, type }) => (
+  const onChecklistModalClose = () => {
+    fetchRequirement();
+    setShowVerificationModal(false)
+    setShowValidationModal(false)
+  }
+
+  const ChecklistSection = ({ title, items, checkedItems, type }) => {
+    const [componentCheckedItems, setComponentCheckedItems] = useState(checkedItems);
+
+    const handleChange = (itemId) => {
+      const currentChecks = [...componentCheckedItems];
+      const index = currentChecks.indexOf(itemId);
+
+    if (index === -1) {
+      currentChecks.push(itemId);
+    } else {
+      currentChecks.splice(index, 1);
+    }
+    setComponentCheckedItems(currentChecks);
+    handleChecklistChange(type, itemId);
+    }
+    
+    return (
     <div className="checklist-section">
       <h3>{title}</h3>
       <div className="checklist-content">
@@ -306,8 +293,8 @@ const RequirementViewEdit = () => {
             {items.map((item) => (
               <Row key={item.id} className="checklist-item">
                 <Checkbox
-                  checked={checkedItems.includes(item.id)}
-                  onChange={() => handleChecklistChange(type, item.id)}
+                  checked={componentCheckedItems.includes(item.id)}
+                  onChange={() => handleChange(item.id)}
                 >
                   {item.name}
                 </Checkbox>
@@ -317,7 +304,7 @@ const RequirementViewEdit = () => {
         </Grid>
       </div>
     </div>
-  );
+  )}
 
   const calculateProgress = (checkedItems, totalItems) => {
     if (!totalItems || totalItems.length === 0) return 0;
@@ -326,7 +313,7 @@ const RequirementViewEdit = () => {
 
   const ChecklistCard = ({ title, checkedItems, totalItems, onClick }) => {
     const progress = calculateProgress(checkedItems, totalItems);
-    
+
     return (
       <div className="checklist-card" onClick={onClick}>
         <h3>{title}</h3>
@@ -349,8 +336,8 @@ const RequirementViewEdit = () => {
         />
       </Modal.Body>
       <Modal.Footer>
-        <Button onClick={onClose} appearance="primary" className="cream-primary-btn">
-          Close
+        <Button onClick={onClose} appearance="primary" >
+          Save
         </Button>
       </Modal.Footer>
     </Modal>
@@ -361,14 +348,14 @@ const RequirementViewEdit = () => {
       const fetchedIssues = await invoke('getRequirementIssues', { requirementId: id });
       setIssues(fetchedIssues);
     } catch (error) {
-      Notification.error({ title: 'Error', description: 'Failed to fetch issues.' });
+      notifier('error', 'Failed to fetch issues');
     }
   };
 
   const IssuesCard = ({ onClick }) => {
     const completedIssues = issues.filter(issue => issue.isDone);
     const progress = calculateProgress(completedIssues, issues);
-    
+
     return (
       <div className="checklist-card issues-card" onClick={onClick}>
         <h3>Related Issues</h3>
@@ -389,7 +376,7 @@ const RequirementViewEdit = () => {
 
   return (
     <div className="requirement-container">
-      <Panel bordered header={<div style={{display:'flex'}}>
+      <Panel bordered header={<div style={{ display: 'flex' }}>
         <h2>{isNewRequirement ? 'New Requirement' : requirement.name}</h2>
         <div className="button-container">
           {isEditing && (
@@ -402,12 +389,12 @@ const RequirementViewEdit = () => {
           </Button>
         </div>
       </div>}>
-        
+
         <br /><br />
         {isEditing ? (
           <>
-            <Input 
-              value={editedRequirement.name} 
+            <Input
+              value={editedRequirement.name}
               onChange={(value) => setEditedRequirement({ ...editedRequirement, name: value })}
               placeholder="Enter requirement name"
             />
@@ -416,7 +403,7 @@ const RequirementViewEdit = () => {
               <Row>
                 <Col xs={6}>
                   <div className="selector-label">Type:</div>
-                  <SelectPicker 
+                  <SelectPicker
                     data={typeOptions}
                     value={editedRequirement.typeId}
                     onChange={(value) => setEditedRequirement({ ...editedRequirement, typeId: value })}
@@ -433,7 +420,7 @@ const RequirementViewEdit = () => {
                 </Col>
                 <Col xs={6}>
                   <div className="selector-label">Stage:</div>
-                  <SelectPicker 
+                  <SelectPicker
                     data={stageOptions}
                     value={editedRequirement.stageId}
                     onChange={(value) => setEditedRequirement({ ...editedRequirement, stageId: value })}
@@ -450,7 +437,7 @@ const RequirementViewEdit = () => {
                 </Col>
                 <Col xs={4}>
                   <div className="selector-label">Status:</div>
-                  <SelectPicker 
+                  <SelectPicker
                     data={statusOptions}
                     value={editedRequirement.statusId}
                     onChange={(value) => setEditedRequirement({ ...editedRequirement, statusId: value })}
@@ -467,7 +454,7 @@ const RequirementViewEdit = () => {
                 </Col>
                 <Col xs={4}>
                   <div className="selector-label">Priority:</div>
-                  <SelectPicker 
+                  <SelectPicker
                     data={priorityOptions}
                     value={editedRequirement.priority}
                     onChange={(value) => setEditedRequirement({ ...editedRequirement, priority: value })}
@@ -484,7 +471,7 @@ const RequirementViewEdit = () => {
                 </Col>
                 <Col xs={4}>
                   <div className="selector-label">Importance:</div>
-                  <SelectPicker 
+                  <SelectPicker
                     data={importanceOptions}
                     value={editedRequirement.importance}
                     onChange={(value) => setEditedRequirement({ ...editedRequirement, importance: value })}
@@ -503,7 +490,7 @@ const RequirementViewEdit = () => {
               <Row style={{ marginTop: '10px' }}>
                 <Col xs={12}>
                   <div className="selector-label">Size:</div>
-                  <Input 
+                  <Input
                     value={editedRequirement.size}
                     onChange={(value) => setEditedRequirement({ ...editedRequirement, size: value })}
                     placeholder="Enter project size"
@@ -512,7 +499,7 @@ const RequirementViewEdit = () => {
                 </Col>
                 <Col xs={12}>
                   <div className="selector-label">Assignee:</div>
-                  <SelectPicker 
+                  <SelectPicker
                     data={users.map(user => ({
                       label: user.displayName,
                       value: user.accountId,
@@ -535,11 +522,11 @@ const RequirementViewEdit = () => {
               </Row>
             </Grid>
             <br /><br />
-            <Input 
-              as="textarea" 
-              rows={6} 
-              value={editedRequirement?.description} 
-              onChange={(value) => setEditedRequirement({ ...editedRequirement, description: value })} 
+            <Input
+              as="textarea"
+              rows={6}
+              value={editedRequirement?.description}
+              onChange={(value) => setEditedRequirement({ ...editedRequirement, description: value })}
               className="description-textarea"
               placeholder="Enter a detailed description of the requirement..."
             />
@@ -550,7 +537,7 @@ const RequirementViewEdit = () => {
               <div className="info-item">
                 <div className="info-label">Type:</div>
                 {currentType && (
-                  <Button 
+                  <Button
                     className="type-button"
                     style={{
                       backgroundColor: currentType.color,
@@ -565,7 +552,7 @@ const RequirementViewEdit = () => {
               <div className="info-item">
                 <div className="info-label">Stage:</div>
                 {currentStage && (
-                  <Button 
+                  <Button
                     className="type-button"
                     style={{
                       backgroundColor: currentStage.color,
@@ -580,7 +567,7 @@ const RequirementViewEdit = () => {
               <div className="info-item">
                 <div className="info-label">Status:</div>
                 {currentStatus && (
-                  <Button 
+                  <Button
                     className="type-button"
                     style={{
                       backgroundColor: currentStatus.color,
@@ -595,7 +582,7 @@ const RequirementViewEdit = () => {
               <div className="info-item">
                 <div className="info-label">Priority:</div>
                 {getCurrentPriority() && (
-                  <Button 
+                  <Button
                     className="type-button"
                     style={{
                       backgroundColor: getCurrentPriority().color,
@@ -610,7 +597,7 @@ const RequirementViewEdit = () => {
               <div className="info-item">
                 <div className="info-label">Importance:</div>
                 {getCurrentImportance() && (
-                  <Button 
+                  <Button
                     className="type-button"
                     style={{
                       backgroundColor: getCurrentImportance().color,
@@ -628,10 +615,10 @@ const RequirementViewEdit = () => {
               </div>
               <div className="info-item">
                 <div className="info-label">Assignee:</div>
-                {requirement?.assigneeId && users.find(u => u.accountId === requirement.assigneeId) && (
+                {requirement?.assigneeId && users?.find?.(u => u.accountId === requirement.assigneeId) && (
                   <div className="assignee-display">
-                    <img 
-                      src={users.find(u => u.accountId === requirement.assigneeId).avatarUrl} 
+                    <img
+                      src={users.find(u => u.accountId === requirement.assigneeId).avatarUrl}
                       alt={users.find(u => u.accountId === requirement.assigneeId).displayName}
                       style={{ width: '24px', height: '24px', marginRight: '8px' }}
                     />
@@ -646,7 +633,7 @@ const RequirementViewEdit = () => {
             </div>
           </>
         )}
-        
+
         {!isNewRequirement && (
           <>
             <Divider />
@@ -683,21 +670,21 @@ const RequirementViewEdit = () => {
 
       {!isNewRequirement && (
         <>
-          <ChecklistModal 
+          <ChecklistModal
             show={showValidationModal}
-            onClose={() => setShowValidationModal(false)}
+            onClose={onChecklistModalClose}
             title="Validation Checklist"
             items={validationChecklist}
-            checkedItems={requirement.validationChecks || []}
+            checkedItems={editedRequirement.validationChecks || []}
             type="validation"
           />
 
-          <ChecklistModal 
+          <ChecklistModal
             show={showVerificationModal}
-            onClose={() => setShowVerificationModal(false)}
+            onClose={onChecklistModalClose}
             title="Verification Checklist"
             items={verificationChecklist}
-            checkedItems={requirement.verificationChecks || []}
+            checkedItems={editedRequirement.verificationChecks || []}
             type="verification"
           />
 

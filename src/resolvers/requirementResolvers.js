@@ -5,7 +5,10 @@ import { USER_REQUIREMENTS_STORAGE_KEY, REQUIREMENT_ISSUE_STORAGE_KEY } from '..
 import { getTypes } from './typeResolvers';
 import { getStages } from './stageResolvers';
 import { getStatuses } from './statusResolvers';
-import { fetchAndCacheUsers, getFromCache, getUserFromCache } from '../cache';
+import { getFromCache, getUserFromCache } from '../cache';
+import { getVerificationChecklist } from './verificationResolvers';
+import { getValidationChecklist } from './validationResolvers';
+import { getUsers } from './userResolvers';
 
 
 // Get all user requirements
@@ -16,9 +19,9 @@ export const getRequirements = async () => {
   if (!storedData) return [];
 
   // Get types, stages, and statuses from cache
-  const types = getFromCache('types') || await getTypes();
-  const stages = getFromCache('stages') || await getStages();
-  const statuses = getFromCache('statuses') || await getStatuses();
+  const types = await getFromCache('types') || await getTypes();
+  const stages = await getFromCache('stages') || await getStages();
+  const statuses = await getFromCache('statuses') || await getStatuses();
   const users = await getUserFromCache()
 
   const typesMap = types.reduce((acc, type) => {
@@ -106,12 +109,12 @@ export const getRequirements = async () => {
 
 // Add a new user requirement
 export const addRequirement = async ({ payload, context }) => {
-  const { name, description, typeId, stageId, statusId, size, assigneeId } = payload;
+  const { name, description, typeId, stageId, statusId, size, assigneeId, importance, priority } = payload;
   const storedData = (await storage.get(USER_REQUIREMENTS_STORAGE_KEY)) || [];
   const user = context?.accountId;
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB');
-  
+
   const newRequirement = {
     id: generateUniqueId('requirement'),
     name,
@@ -119,6 +122,8 @@ export const addRequirement = async ({ payload, context }) => {
     validationChecks: [],
     verificationChecks: [],
     typeId,
+    importance,
+    priority,
     stageId,
     statusId,
     size,
@@ -175,7 +180,7 @@ export const getRequirement = async ({ payload }) => {
 
   // Get users from cache to transform IDs to display names in logs
   const users = await getUserFromCache();
-  
+
   // Transform logs to use display names
   const transformedLogs = requirement?.logs?.map?.(log => {
     // Replace all instances of {{@userId@}} with the user's display name
@@ -200,7 +205,7 @@ export const updateRequirement = async ({ payload, context }) => {
     throw new Error(`Requirement ${id} not found.`);
   }
 
-  const oldRequirement = storedData?.[index]||{};
+  const oldRequirement = storedData?.[index] || {};
   const newRequirement = {
     ...oldRequirement,
     name,
@@ -223,9 +228,9 @@ export const updateRequirement = async ({ payload, context }) => {
   const dateStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB');
 
   // Get lookup data from cache
-  const types = getFromCache('types') || await getTypes();
-  const stages = getFromCache('stages') || await getStages();
-  const statuses = getFromCache('statuses') || await getStatuses();
+  const types = await getFromCache('types') || await getTypes();
+  const stages = await getFromCache('stages') || await getStages();
+  const statuses = await getFromCache('statuses') || await getStatuses();
   const users = await getUserFromCache();
 
   // Create lookup maps for faster access
@@ -292,7 +297,7 @@ export const updateRequirement = async ({ payload, context }) => {
   newRequirement.logs = logs;
   storedData[index] = newRequirement;
   await storage.set(USER_REQUIREMENTS_STORAGE_KEY, storedData);
-  return getRequirement({ payload: { id } });
+  return await getRequirement({ payload: { id } });
 };
 
 // Get dashboard data
@@ -303,9 +308,9 @@ export const getDashboardData = async ({ payload }) => {
   let issueDataDict = {};
 
   // Get types, stages, and statuses from cache
-  const types = getFromCache('types') || await getTypes();
-  const stages = getFromCache('stages') || await getStages();
-  const statuses = getFromCache('statuses') || await getStatuses();
+  const types = await getTypes()
+  const stages = await getStages()
+  const statuses = await getStatuses()
   const users = await getUserFromCache();
 
   // Create lookup maps for faster access
@@ -332,13 +337,12 @@ export const getDashboardData = async ({ payload }) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        "properties": [],
         issueIdsOrKeys: Object.keys(requirementIssueMappings),
         "expand": [
           "names"
         ],
         "fieldsByKeys": false,
-        fields: ['summary', 'id', 'description']
+        fields: ["summary", "id", "description", "status", "priority", "assignee"]
       })
     });
 
@@ -362,8 +366,13 @@ export const getDashboardData = async ({ payload }) => {
         }
       }
 
+      const assignee = issue.fields.assignee;
+
       issueDataDict[issue.id] = {
         summary: issue.fields.summary,
+        priority: issue.fields.priority.name || '-',
+        assignee: assignee || {},
+        status: { name: issue.fields.status.name || "-" },
         description: descriptionText
       };
     }
@@ -382,13 +391,19 @@ export const getDashboardData = async ({ payload }) => {
     }
 
     // Get assignee data from users cache
-    const assignee = assigneeId ? users[assigneeId] || null : null;
+    const assignee = assigneeId ? users?.[assigneeId] || null : null;
 
-    const children = issueIds.map((issueId) => ({
-      id: `${id}-${issueId}`,
-      name: issueDataDict[issueId]?.summary || `Issue ${issueId}`,
-      description: issueDataDict[issueId]?.description || 'No description available'
-    }));
+    const children = issueIds.map((issueId) => {
+      const issueData = issueDataDict[issueId];
+      return {
+        id: `${id}-${issueId}`,
+        name: issueData?.summary || `Issue ${issueId}`,
+        description: issueData?.description || 'No description available',
+        priority: issueData?.priority,
+        status: issueData?.status,
+        assignee: issueData?.assignee,
+      }
+    });
 
     return {
       id,
@@ -410,6 +425,23 @@ export const getDashboardData = async ({ payload }) => {
   return { data };
 };
 
+export const getCachedInformation = async () => {
+  const types = await getTypes()
+  const stages = await getStages()
+  const statuses = await getStatuses()
+  const verificationChecklist = await getVerificationChecklist()
+  const validationChecklist = await getValidationChecklist()
+  const users = await getUsers()
+
+  return {
+    types,
+    verificationChecklist,
+    validationChecklist,
+    stages,
+    statuses,
+    users
+  };
+}
 // Helper function to extract text from Atlassian Document Format (ADF)
 function extractTextFromADF(doc) {
   if (!doc || typeof doc !== 'object') {
@@ -438,4 +470,5 @@ function extractTextFromADF(doc) {
   }
 
   return text.trim() || 'No description text found';
-} 
+}
+

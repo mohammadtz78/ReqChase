@@ -8,7 +8,7 @@ const IssueWidget = () => {
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedRequirements, setSelectedRequirements] = useState([]);
-    const [minHeight, setMinHeight] = useState('100px');
+    const [minHeight, setMinHeight] = useState('250px');
     const [issueId, setIssueId] = useState('');
     const [assignedRequirements, setAssignedRequirements] = useState([]);
 
@@ -80,13 +80,14 @@ const IssueWidget = () => {
 
     const resetModal = () => {
         setIsModalOpen(false);
-        setMinHeight('100px');
     };
 
     return (
         <div>
             {loading ? (
-                <Loader />
+                <div style={{ minHeight: minHeight }}>
+                <Loader  />
+                </div>
             ) : (
                 <div style={{ minHeight: minHeight }}>
                     <br />
@@ -100,7 +101,6 @@ const IssueWidget = () => {
                         appearance="primary"
                         onClick={() => {
                             setIsModalOpen(true);
-                            setMinHeight('400px');
                         }}
                     >
                         Assign Requirements

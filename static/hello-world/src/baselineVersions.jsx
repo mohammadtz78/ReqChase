@@ -5,22 +5,22 @@ import { Panel } from 'rsuite';
 
 const { Column, HeaderCell, Cell } = Table;
 
-const BaselineVersions = () => {
+const BaselineVersions = ({ notifier,loadingState }) => {
     const [versions, setVersions] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newVersion, setNewVersion] = useState({ key: '', description: '' });
     const [restoring, setRestoring] = useState(false);
+
+    const [isMainLoading, setMainLoading] = loadingState;
 
     const loadVersions = async () => {
         try {
             setLoading(true);
             const result = await invoke('getVersions');
             setVersions(result);
-            setError(null);
         } catch (err) {
-            setError('Failed to load versions');
+            notifier('error', 'Failed to load versions');
             console.error(err);
         } finally {
             setLoading(false);
@@ -38,9 +38,10 @@ const BaselineVersions = () => {
             setShowCreateModal(false);
             setNewVersion({ key: '', description: '' });
             await loadVersions();
-            setError(null);
+            notifier('success', 'Version created successfully');
         } catch (err) {
-            setError('Failed to create version');
+            notifier('error', 'Failed to create version');
+            
             console.error(err);
         } finally {
             setLoading(false);
@@ -52,9 +53,10 @@ const BaselineVersions = () => {
             setLoading(true);
             await invoke('removeVersion', { versionKey });
             await loadVersions();
-            setError(null);
+            
+            notifier('success', 'Version removed successfully');
         } catch (err) {
-            setError('Failed to remove version');
+            notifier('error', 'Failed to remove version');
             console.error(err);
         } finally {
             setLoading(false);
@@ -64,13 +66,17 @@ const BaselineVersions = () => {
     const handleRestoreVersion = async (versionKey) => {
         try {
             setRestoring(true);
+            setMainLoading(true);
             await invoke('restoreVersion', { versionKey });
-            setError(null);
+            setMainLoading(false);
+            notifier('success', 'Version restored successfully');
             // Show success message or handle UI update
         } catch (err) {
-            setError('Failed to restore version');
+            setMainLoading(false);
+            notifier('error', 'Failed to restore version');
             console.error(err);
         } finally {
+
             setRestoring(false);
         }
     };
@@ -78,12 +84,6 @@ const BaselineVersions = () => {
     return (
         <div style={{ padding: '20px' }}>
             <Panel header="Baseline Versions" bordered>
-                {error && (
-                    <Message type="error" style={{ marginBottom: '20px' }}>
-                        {error}
-                    </Message>
-                )}
-
                 <ButtonToolbar style={{ marginBottom: '20px' }}>
                     <Button appearance="primary" onClick={() => setShowCreateModal(true)}>
                         Create New Version

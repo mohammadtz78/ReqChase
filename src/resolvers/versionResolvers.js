@@ -1,6 +1,7 @@
 import { storage } from '@forge/api';
 import pako from 'pako';
 import { STORAGE_KEYS } from '../config';
+import { initializeCache } from '../cache';
 
 const VERSION_STORAGE_KEY = 'versions';
 
@@ -117,6 +118,7 @@ export async function restoreVersion({ payload }) {
     
     // Restore all data
     await restoreAllStorageData(decompressedData);
+    await initializeCache()
     
     return { success: true };
 } 

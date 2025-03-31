@@ -5,7 +5,7 @@ import { getFromCache, updateCache } from '../cache';
 
 // Get all types
 export const getTypes = async () => {
-  const cachedTypes = getFromCache('types');
+  const cachedTypes = await getFromCache('types');
   if (cachedTypes !== null) {
     return cachedTypes;
   }

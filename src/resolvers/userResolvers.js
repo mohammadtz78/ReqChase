@@ -1,4 +1,4 @@
-import { getFromCache } from '../cache';
+import { getUserFromCache } from '../cache';
 
 // Get all users
 export const getUsers = async () => {

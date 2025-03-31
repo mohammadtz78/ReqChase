@@ -5,7 +5,7 @@ import { getFromCache, updateCache } from '../cache';
 
 // Get verification checklist
 export const getVerificationChecklist = async () => {
-  const cachedChecklist = getFromCache('verificationChecklist');
+  const cachedChecklist = await getFromCache('verificationChecklist');
   if (cachedChecklist !== null) {
     return cachedChecklist;
   }

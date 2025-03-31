@@ -30,6 +30,7 @@ resolver.define('deleteRequirement', requirementResolvers.deleteRequirement);
 resolver.define('getRequirement', requirementResolvers.getRequirement);
 resolver.define('updateRequirement', requirementResolvers.updateRequirement);
 resolver.define('getDashboardData', requirementResolvers.getDashboardData);
+resolver.define('getCachedInformation', requirementResolvers.getCachedInformation);
 
 // Register validation checklist resolvers
 resolver.define('getValidationChecklist', validationResolvers.getValidationChecklist);

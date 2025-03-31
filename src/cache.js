@@ -27,13 +27,21 @@ const storageKeyMap = {
   [VERIFICATION_CHECKLIST_STORAGE_KEY]: 'verificationChecklist'
 };
 
+const reversedStorageKeyMap = {
+  'types': TYPES_STORAGE_KEY,
+  'stages': STAGES_STORAGE_KEY,
+  'statuses': STATUS_STORAGE_KEY,
+  'validationChecklist': VALIDATION_CHECKLIST_STORAGE_KEY,
+  'verificationChecklist': VERIFICATION_CHECKLIST_STORAGE_KEY
+}
+
 // Initialize cache with data from storage
 export const initializeCache = async () => {
-  const promises = Object.entries(storageKeyMap).map(async ([key, cacheKey]) => {
+  const cacheKeys = Object.entries(storageKeyMap);
+  for (const [key,cachedKey] of cacheKeys) {
     const data = await storage.get(key);
-    cache[cacheKey] = data || [];
-  });
-  await Promise.all(promises);
+    cache[cachedKey] = data || []; 
+  }
 };
 
 export const getUserFromCache = async () => {
@@ -43,19 +51,21 @@ export const getUserFromCache = async () => {
   return cache.users
 }
 // Get data from cache
-export const getFromCache = (key) => {
+export const getFromCache = async(key) => {
+  if(cache[key]===null) {
+    await updateCache([reversedStorageKeyMap[key]]);
+  }
   return cache[key];
 };
 
 // Update cache for specific keys
 export const updateCache = async (keys) => {
-  const promises = keys.map(async (key) => {
-    if (storageKeyMap[key]) {
+  for (const key of keys) {
+     if (storageKeyMap[key]) {
       const data = await storage.get(key);
       cache[storageKeyMap[key]] = data || [];
     }
-  });
-  await Promise.all(promises);
+  }
 };
 
 // Get all cached data

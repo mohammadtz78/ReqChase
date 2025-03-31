@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { invoke, view } from '@forge/bridge';
-import { Button, Table, Notification, Progress, InputGroup, SelectPicker } from 'rsuite';
+import { Button, Table, Progress, SelectPicker } from 'rsuite';
 import { useNavigate } from "react-router";
 import Loader from './loader';
 import './app.css';
 import './requirements.css';
 
-const Requirements = ({history}) => {
+const Requirements = ({notifier}) => {
   const [requirements, setRequirements] = useState([]);
   const [filteredRequirements, setFilteredRequirements] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -59,7 +59,7 @@ const Requirements = ({history}) => {
       setRequirements(fetchedRequirements);
       setFilteredRequirements(fetchedRequirements);
     } catch (error) {
-      Notification.error({ title: 'Error', description: 'Failed to fetch requirements.' });
+      notifier('error', 'Failed to fetch requirements');
     } finally {
       setLoading(false);
     }
@@ -77,9 +77,9 @@ const Requirements = ({history}) => {
 
       await invoke('deleteRequirement', { id });
       await fetchRequirements();
-      Notification.success({ title: 'Success', description: 'Requirement deleted successfully.' });
+      notifier('success', 'Requirement deleted successfully');
     } catch (error) {
-      Notification.error({ title: 'Error', description: 'Failed to delete requirement.' });
+      notifier('error', 'Failed to delete requirement');
     }
     setLoading(false);
   };
